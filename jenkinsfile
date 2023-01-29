@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('checkout') {
+            steps {
+                echo 'CHECKING OUT CODE'
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/leon321jiang/tf-security']])
+            }
+        }
+        stage('init') {
+            steps {
+                echo 'run terraform init'
+                sh("terraform init -migrate-state");
+            }
+        }
+        stage('dev-plan') {
+            steps {
+                echo 'run terraform plan for dev'
+                sh("terraform plan -var-file=fixture.dev.tfvars" -out=tf-dev.plan);
+            }
+        }
+        stage('dev-apply') {
+            steps {
+                echo 'run terraform apply for dev'
+                sh("terraform apply tf-dev.plan")
+            }
+        }
+        stage('uat-plan') {
+            steps {
+                echo 'run terraform plan for uat'
+                sh("terraform plan -var-file=fixture.uat.tfvars" -out=tf-uat.plan);
+            }
+        }
+        stage('uat-apply') {
+            steps {
+                echo 'run terraform apply for uat'
+                sh("terraform apply tf-uat.plan")
+            }
+        }
+    }
+}
